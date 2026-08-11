@@ -1,0 +1,12 @@
+# macOS
+.DS_Store
+
+# Python / Poetry
+.venv/
+__pycache__/
+*.py[cod]
+.env
+
+# PlatformIO / C++
+.pio/
+.vscode/
