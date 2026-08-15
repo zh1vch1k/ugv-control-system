@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 
-struct __attribute__((packed)) Gamepad {
+struct __attribute__((packed)) Controller {
     uint8_t start_byte;
     uint8_t left_x;
     uint8_t left_y;
