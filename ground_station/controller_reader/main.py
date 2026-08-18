@@ -16,7 +16,7 @@ joystick.init()
 
 ser = serial.Serial('/dev/cu.usbserial-595D0075621', 115200, timeout=1)
 time.sleep(2)
-polling_rate = 0.05
+polling_rate = 0.150
 
 def scale_axis(axis) -> int:
     return max(0, min(127, round((axis + 1) /2 * 127)))
@@ -34,7 +34,6 @@ while True:
                 btn_mask |= (1 << 0)
             elif event.button == RIGHT_STICK_TAP:
                 btn_mask |= (1 << 1)
-                print("another one")
             elif event.button == L1_BTN:
                 btn_mask |= (1 << 2)
             elif event.button == R1_BTN:
