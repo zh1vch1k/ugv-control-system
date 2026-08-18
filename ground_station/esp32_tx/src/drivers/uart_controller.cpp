@@ -1,5 +1,6 @@
 #include "uart_controller.hpp"
 
+
 bool readUART(Controller &pad) {
     int len = uart_read_bytes(UART_NUM_0, (uint8_t*)&pad, sizeof(Controller), portMAX_DELAY);
 
