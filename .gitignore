@@ -1,12 +1,101 @@
-# macOS
+# ==========================================
+# macOS System Files
+# ==========================================
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+ehthumbs.db
+Thumbs.db
+*.fileloc
 
-# Python / Poetry
-.venv/
+# ==========================================
+# Python & Virtual Environments (Poetry, venv)
+# ==========================================
 __pycache__/
 *.py[cod]
-.env
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+poetry.lock.bak
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
 
-# PlatformIO / C++
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+
+# ==========================================
+# IDEs & Editors
+# ==========================================
+# PyCharm / CLion / JetBrains
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# ==========================================
+# PlatformIO & ESP-IDF (ESP32)
+# ==========================================
 .pio/
-.vscode/
+.pioenvs/
+.piolibdeps/
+.clang_complete
+.gcc-flags.json
+
+# ESP-IDF temporary artifacts
+sdkconfig.old
+sdkconfig.ci
+managed_components/
+build/
+*.bin
+*.elf
+*.map
+
+# ==========================================
+# STM32 / Embedded Toolchains (CubeIDE, GCC)
+# ==========================================
+Debug/
+Release/
+*.o
+*.obj
+*.d
+*.su
+*.hex
+*.lst
+.settings/
+.project
+.cproject
+
+# ==========================================
+# Computer Vision / ML Weights & Datasets
+# ==========================================
+*.pt
+*.pth
+*.onnx
+*.engine
+*.tflite
+runs/
+wandb/
+data/
+datasets/

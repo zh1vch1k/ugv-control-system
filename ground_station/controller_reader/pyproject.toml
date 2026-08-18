@@ -1,0 +1,21 @@
+[project]
+name = "joystick-control"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "IlliaKyselov1902",email = "qwertytwenty129@gmail.com"}
+]
+requires-python = ">=3.13,<4.0"
+dependencies = [
+    "pydualsense (>=0.7.5,<0.8.0)",
+    "pygame (>=2.6.1,<3.0.0)",
+    "pyserial (>=3.5,<4.0)"
+]
+
+
+[tool.poetry.dependencies]
+python = ">=3.13,<4.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

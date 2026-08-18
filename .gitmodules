@@ -1,0 +1,6 @@
+[submodule "libs/rfbp"]
+	path = libs/rfbp
+	url = https://github.com/zh1vch1k/rfbp
+[submodule "vision_system"]
+	path = vision_system
+	url = https://github.com/zh1vch1k/rpi5-vision-pipeline
