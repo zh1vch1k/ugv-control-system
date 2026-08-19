@@ -13,6 +13,7 @@
 #define HAL_FLASH_MODULE_ENABLED
 #define HAL_PWR_MODULE_ENABLED
 #define HAL_DMA_MODULE_ENABLED
+#define HAL_UART_MODULE_ENABLED
 
 /* 2. Настройки тактирования и кварцев */
 #define HSE_VALUE               25000000U /* Внешний кварц Black Pill: 25 МГц */
@@ -43,6 +44,7 @@
 #include "stm32f4xx_hal_cortex.h"
 #include "stm32f4xx_hal_flash.h"
 #include "stm32f4xx_hal_pwr.h"
+#include "stm32f4xx_hal_uart.h"
 
 #ifdef __cplusplus
 }
