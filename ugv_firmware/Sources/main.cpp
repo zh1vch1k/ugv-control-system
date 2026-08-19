@@ -1,29 +1,48 @@
 #include "stm32f4xx_hal.h"
 
-// Системный обработчик прерывания SysTick (нужен для работы HAL_Delay)
 extern "C" void SysTick_Handler(void) {
     HAL_IncTick();
 }
 
 int main(void) {
-    // 1. Инициализация HAL: настраивает Flash prefetch, SysTick и приоритеты
     HAL_Init();
 
-    // 2. Включаем тактирование порта C
-    __HAL_RCC_GPIOC_CLK_ENABLE();
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOB_CLK_ENABLE();
 
-    // 3. Конфигурируем встроенный светодиод (PC13)
-    GPIO_InitTypeDef gpio_init = {};
-    gpio_init.Pin = GPIO_PIN_13;
-    gpio_init.Mode = GPIO_MODE_OUTPUT_PP;
-    gpio_init.Pull = GPIO_NOPULL;
-    gpio_init.Speed = GPIO_SPEED_FREQ_LOW;
-    HAL_GPIO_Init(GPIOC, &gpio_init);
+    GPIO_InitTypeDef gpioCfg = {};
+    gpioCfg.Pin = GPIO_PIN_2 | GPIO_PIN_3;
+    gpioCfg.Mode = GPIO_MODE_AF_PP;
+    gpioCfg.Pull = GPIO_PULLUP;
+    gpioCfg.Speed = GPIO_SPEED_FREQ_HIGH;
+    gpioCfg.Alternate = GPIO_AF7_USART2;
+    HAL_GPIO_Init(GPIOA, &gpioCfg);
 
-    // 4. Главный цикл мигалки
-    while (1) {
-        HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
-        HAL_Delay(500); // Если HAL_Init и SysTick работают, пауза ровно 500 мс
+    GPIO_InitTypeDef auxCfg = {};
+    auxCfg.Pin = GPIO_PIN_2;
+    auxCfg.Mode = GPIO_MODE_INPUT;
+    auxCfg.Pull = GPIO_NOPULL;
+    auxCfg.Speed = GPIO_SPEED_FREQ_LOW;
+
+    HAL_GPIO_Init(GPIOB, &auxCfg);
+
+
+    __HAL_RCC_USART2_CLK_ENABLE();
+
+    UART_HandleTypeDef uartCfg = {};
+    uartCfg.Instance = USART2;
+    uartCfg.Init.BaudRate = 9600;
+    uartCfg.Init.WordLength = UART_WORDLENGTH_8B;
+    uartCfg.Init.StopBits = UART_STOPBITS_1;
+    uartCfg.Init.Parity = UART_PARITY_NONE;
+    uartCfg.Init.Mode = UART_MODE_TX_RX;
+    uartCfg.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+    uartCfg.Init.OverSampling = UART_OVERSAMPLING_16;
+
+    HAL_UART_Init(&uartCfg);
+
+    while(1) {
+
     }
 
     return 0;
