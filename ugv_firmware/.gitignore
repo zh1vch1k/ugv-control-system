@@ -1,0 +1,61 @@
+# ==========================================
+# STM32 & CMake Build Artifacts
+# ==========================================
+Debug/
+Release/
+build/
+cmake-build-*/
+out/
+bin/
+obj/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+cmake_install.cmake
+Makefile
+*.ninja
+.ninja_*
+
+# Target firmware binaries & map files
+*.elf
+*.bin
+*.hex
+*.map
+*.d
+*.o
+*.obj
+*.su
+*.a
+
+# ==========================================
+# STM32CubeIDE / Eclipse metadata
+# ==========================================
+.settings/
+.project
+.cproject
+.mxproject
+*.launch
+*.launch.orig
+
+# ==========================================
+# IDEs & Editors
+# ==========================================
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/c_cpp_properties.json
+
+# ==========================================
+# OS Generated Files (macOS / Windows)
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
