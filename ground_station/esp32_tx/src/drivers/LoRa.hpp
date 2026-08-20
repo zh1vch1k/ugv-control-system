@@ -37,7 +37,7 @@ namespace config::freq {
     {0x07, 0xC0}, // RegFrfMid
     {0x08, 0x00}, // RegFrfLsb
 
-    {0x09, 0x8F}, // RegPaConfig (max power)
+    {0x09, 0x85}, // RegPaConfig (7db) 7db - 0x85 / 10db - 0x88 / 13 - 0x8B / 20 - 0x8F
     {0x1D, 0x72}, // RegModemConfig1 (BW 125kHz, CR 4/5)
     {0x1E, 0x74}, // RegModemConfig2 (SF7, CRC On)
 
