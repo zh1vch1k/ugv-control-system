@@ -31,6 +31,7 @@ set(SOURCES
     Sources/syscalls.c
     Sources/sysmem.c
     Startup/startup_stm32f411ceux.s
+    Sources/Modules/Ebyte433_T20D.cpp
     
     Drivers/cmsis_device_f4/Source/Templates/system_stm32f4xx.c
 
@@ -46,12 +47,11 @@ set(SOURCES
     Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ex.c
     Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c
     Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../libs/rfbp/src/packet.cpp
 )
 
-# Создание исполняемого файла
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-# Пути к заголовочным файлам
 target_include_directories(${PROJECT_NAME} PRIVATE
     Includes
     Sources
@@ -59,9 +59,10 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     Drivers/STM32F4xx_HAL_Driver/Inc/Legacy
     Drivers/cmsis_device_f4/Include
     Drivers/CMSIS_5/CMSIS/Core/Include
+    ${CMAKE_CURRENT_SOURCE_DIR}/../libs/rfbp/lib
 )
 
-# Флаги линковщика
+
 target_link_options(${PROJECT_NAME} PRIVATE
     ${CPU_FLAGS}
     -T${CMAKE_CURRENT_SOURCE_DIR}/STM32F411CEUX_FLASH.ld
