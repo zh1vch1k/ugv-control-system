@@ -29,39 +29,47 @@ namespace config::freq {
         F_868
     };
 
-    constexpr std::array<RegConfig, 10> config_868 = {{
-    {0x01, 0x80}, // RegOpMode = Sleep + LoRa
-    {0x01, 0x81}, // RegOpMode = Standby
+    constexpr std::array<RegConfig, 13> config_868 = {{
+        {0x01, 0x80}, // RegOpMode: Sleep + LoRa
+        {0x01, 0x81}, // RegOpMode: Standby
 
-    {0x06, 0xE4}, // RegFrfMsb
-    {0x07, 0xC0}, // RegFrfMid
-    {0x08, 0x00}, // RegFrfLsb
+        {0x06, 0xE4}, // RegFrfMsb (868.000 MHz)
+        {0x07, 0xC0}, // RegFrfMid
+        {0x08, 0x00}, // RegFrfLsb
 
-    {0x09, 0x85}, // RegPaConfig (7db) 7db - 0x85 / 10db - 0x88 / 13 - 0x8B / 20 - 0x8F
-    {0x1D, 0x72}, // RegModemConfig1 (BW 125kHz, CR 4/5)
-    {0x1E, 0x74}, // RegModemConfig2 (SF7, CRC On)
+        {0x09, 0x85}, // RegPaConfig: 7 dBm (PA_BOOST)
+        {0x1D, 0x72}, // RegModemConfig1: BW 125kHz, CR 4/5, Explicit Header
+        {0x1E, 0x74}, // RegModemConfig2: SF7, CRC On
+        {0x26, 0x04}, // RegModemConfig3: LowDataRateOptimize Off, AGC Auto On
 
-    {0x0E, 0x80}, // RegFifoTxBaseAddr
-    {0x0F, 0x00}  // RegFifoRxBaseAddr
+        {0x20, 0x00}, // RegPreambleMsb
+        {0x21, 0x10}, // RegPreambleLsb: 16 symbols preamble for reliable EBYTE sync
+        {0x39, 0x12}, // RegSyncWord: 0x12 (Default EBYTE E32 private network)
+
+        {0x0E, 0x80}  // RegFifoTxBaseAddr
 }};
 
-    constexpr std::array<RegConfig, 10> config_433 = {{
+constexpr std::array<RegConfig, 13> config_433 = {{
     {0x01, 0x80}, // RegOpMode: Sleep + LoRa
     {0x01, 0x81}, // RegOpMode: Standby
 
-    {0x06, 0x6C}, // RegFrfMsb
+    {0x06, 0x6C}, // RegFrfMsb (433.000 MHz)
     {0x07, 0x40}, // RegFrfMid
     {0x08, 0x00}, // RegFrfLsb
 
-    {0x09, 0x85}, // RegPaConfig 
-    {0x1D, 0x72}, // RegModemConfig1 
-    {0x1E, 0x94}, // RegModemConfig2 
+    {0x09, 0x85}, // RegPaConfig: ~7 dBm (PA_BOOST) — в пределах лимита 10dBm
+    {0x1D, 0x92}, // RegModemConfig1: BW 500kHz, CR 4/5, Explicit Header
+    {0x1E, 0xB4}, // RegModemConfig2: SF11, CRC On
+    {0x26, 0x0C}, // RegModemConfig3: LowDataRateOptimize ON + AGC Auto On
 
-    {0x0E, 0x80}, // RegFifoTxBaseAddr
-    {0x0F, 0x00}  // RegFifoRxBaseAddr 
-    }};
+    {0x20, 0x00}, // RegPreambleMsb
+    {0x21, 0x08}, // RegPreambleLsb: 8 символов
+    {0x39, 0x12}, // RegSyncWord: 0x12 (E32 default)
 
-    constexpr const std::array<RegConfig, 10>& resolveConfig(Band band) {
+    {0x0E, 0x80}  // RegFifoTxBaseAddr
+}};
+
+    constexpr const std::array<RegConfig, 13>& resolveConfig(Band band) {
         switch (band) {
             case Band::F_433: return config_433;
             case Band::F_868: return config_868;
@@ -71,6 +79,8 @@ namespace config::freq {
 }
 
 esp_err_t lora_init(spi_host_device_t host);
+
+void write_LoRa_fifo(const uint8_t* buffer, size_t size);
 
 void write_LoRa_register(uint8_t reg, uint8_t data);
 

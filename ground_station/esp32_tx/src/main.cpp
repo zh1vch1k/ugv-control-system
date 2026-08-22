@@ -56,7 +56,7 @@ void broadcast(void* pv) {
             xQueueOverwrite(controller_queue_handle, &pad);
             LoraPayload_t payload =convertControllerData(pad);
             
-            packetDataTransaction(0x00, 0x00, 0x17, payload);
+            packetDataTransaction(0x00, 0x01, 0x17, payload);
             lora_count.fetch_add(1, std::memory_order_relaxed);
         }
         else {
