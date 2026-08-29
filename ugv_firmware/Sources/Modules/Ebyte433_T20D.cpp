@@ -13,19 +13,22 @@ bool waitForAuxHigh(GPIO_TypeDef* auxPort, uint16_t auxPin, uint32_t timeout_ms)
 }
 
 
-std::optional<LoraRxFrame_t> readLoRa(const EbyteConfig& cfg, uint32_t timeout_ms) {
+std::optional<LoraRxFrame_t> readLoRa(const EbyteConfig& cfg,
+									  const SpeckContext_t* crypto_ctx,
+									  SpeckSessionCounter_t* rx_cnt,
+									  uint32_t timeout_ms) {
 	if(__HAL_UART_GET_FLAG(cfg.huart, UART_FLAG_RXNE) == RESET) {
 		return std::nullopt;
 	}
 
-	LoraRxFrame_t frame = {};
+	uint8_t rx_buffer[sizeof(LoraRxFrame_t)] = {};
 
 
 	HAL_StatusTypeDef status = HAL_UART_Receive(
-	    cfg.huart,
-		reinterpret_cast<uint8_t*>(&frame),
-	    sizeof(LoraRxFrame_t),
-		timeout_ms
+	        cfg.huart,
+	        rx_buffer,
+	        sizeof(rx_buffer),
+	        timeout_ms
 	);
 
 	if (status != HAL_OK) {
@@ -33,14 +36,7 @@ std::optional<LoraRxFrame_t> readLoRa(const EbyteConfig& cfg, uint32_t timeout_m
 		return std::nullopt;
 	}
 
-	const uint8_t* payloadBytes = reinterpret_cast<const uint8_t*>(&frame.payload);
-	uint8_t calculatedCrc = CRC8_calc(payloadBytes, sizeof(frame.payload));
-
-	if (calculatedCrc == frame.crc8) {
-		return frame;
-	}
-
-	return std::nullopt;
+	return decodePacket(rx_buffer, sizeof(rx_buffer), crypto_ctx, rx_cnt);
 }
 
 

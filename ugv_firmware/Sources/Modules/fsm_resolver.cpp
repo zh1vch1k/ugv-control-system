@@ -1,0 +1,103 @@
+#include "fsm_resolver.hpp"
+
+
+void flushUartBuffer(UART_HandleTypeDef* huart) {
+    __HAL_UART_CLEAR_OREFLAG(huart);
+    __HAL_UART_CLEAR_FEFLAG(huart);
+    __HAL_UART_CLEAR_NEFLAG(huart);
+    __HAL_UART_CLEAR_PEFLAG(huart);
+
+    while ((huart->Instance->SR & USART_SR_RXNE) != 0) {
+        volatile uint8_t dummy = huart->Instance->DR;
+        (void)dummy;
+    }
+}
+
+std::optional<uint32_t> readHandshake(const EbyteConfig& cfg, uint32_t salt, uint32_t timeout_ms) {
+	flushUartBuffer(cfg.huart);
+
+	HandshakeRx_t handshake = {};
+
+	HAL_StatusTypeDef status = HAL_UART_Receive(
+            cfg.huart,
+			reinterpret_cast<uint8_t*>(&handshake),
+	        sizeof(HandshakeRx_t),
+	        timeout_ms
+    );
+
+	if (status != HAL_OK) {
+		flushUartBuffer(cfg.huart);
+		return std::nullopt;
+	}
+
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+
+	if (handshake.rx_session_salt == salt) {
+		return handshake.session_id;
+	}
+
+	return std::nullopt;
+}
+
+
+
+std::optional<HandshakeTx_t> sendHandshake(const EbyteConfig& cfg, uint8_t addh, uint8_t addl, uint8_t channel,
+                                   uint32_t session_id, uint32_t salt, uint32_t timeout_ms) {
+    HandshakeTx_t response = {};
+    response.addh = addh;
+    response.addl = addl;
+    response.channel = channel;
+    response.tx_session_salt = salt;
+    response.session_id = session_id;
+
+    const uint8_t* innerBytes = reinterpret_cast<const uint8_t*>(&response) + 3;
+    const size_t innerLen = sizeof(HandshakeTx_t) - 3;
+
+    uint8_t tx_buffer[sizeof(HandshakeTx_t)];
+
+    std::memcpy(tx_buffer, &response, 3);
+
+    const uint8_t xorKey = 0xCA - channel;
+
+    for (size_t i = 0; i < innerLen; ++i) {
+        tx_buffer[3 + i] = innerBytes[i] ^ xorKey;
+    }
+
+    uint32_t start_tick = HAL_GetTick();
+    while (HAL_GPIO_ReadPin(cfg.auxPort, cfg.auxPin) == GPIO_PIN_RESET) {
+        if (HAL_GetTick() - start_tick >= timeout_ms) {
+            return std::nullopt;
+        }
+    }
+
+    HAL_StatusTypeDef status = HAL_UART_Transmit(
+        cfg.huart,
+        tx_buffer,
+        sizeof(tx_buffer),
+        timeout_ms
+    );
+
+    if (status != HAL_OK) {
+        return std::nullopt;
+    }
+
+    return response;
+}
+
+
+
+std::optional<HandshakeRx_t> sendHandshakeReply(const EbyteConfig& cfg, uint32_t session_id, uint32_t salt, uint32_t timeout_ms) {
+    HandshakeRx_t reply{};
+    reply.rx_session_salt = salt;
+    reply.session_id      = session_id;
+
+    HAL_StatusTypeDef status = HAL_UART_Transmit(
+        cfg.huart,
+        reinterpret_cast<uint8_t*>(&reply),
+        sizeof(HandshakeRx_t),
+        timeout_ms
+    );
+
+    return reply;
+}
+

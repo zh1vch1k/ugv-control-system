@@ -7,6 +7,8 @@ idf_component_register(
     SRCS 
         ${app_sources}
         "../../../libs/rfbp/src/packet.cpp"
+        "../../../libs/rfbp/src/speck.cpp"
+        "../../../libs/rfbp/src/fsm.cpp"
     INCLUDE_DIRS 
         "." 
         "../../../libs/rfbp/lib"
