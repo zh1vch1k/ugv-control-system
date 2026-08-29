@@ -1,12 +1,23 @@
 #include "stm32f4xx_hal.h"
+
+#include "Modules/fsm_resolver.hpp"
 #include "Modules/Ebyte433_T20D.hpp"
+
 
 extern "C" void SysTick_Handler(void) {
     HAL_IncTick();
 }
 
+
 int main(void) {
     HAL_Init();
+    static RadioFSM state = RadioFSM::IDLE;
+    static uint32_t session_id = 0UL;
+    static uint32_t last_tick = 0ULL;
+    static uint32_t last_poll_tick = 0UL;
+
+    const uint8_t POLL_INTERVAL_MS = 150;
+    const uint16_t SESSION_TIMEOUT_MS = 15000;
 
     uint32_t resetCauseRaw = RCC->CSR;
     __HAL_RCC_CLEAR_RESET_FLAGS();
@@ -23,6 +34,12 @@ int main(void) {
     gpioCfg.Speed = GPIO_SPEED_FREQ_HIGH;
     gpioCfg.Alternate = GPIO_AF7_USART2;
     HAL_GPIO_Init(GPIOA, &gpioCfg);
+
+    GPIO_InitTypeDef led = {};
+    led.Pin = GPIO_PIN_13;
+    led.Mode = GPIO_MODE_OUTPUT_OD;
+    led.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(GPIOC, &led);
 
     GPIO_InitTypeDef auxCfg = {};
     auxCfg.Pin = GPIO_PIN_10;
@@ -49,14 +66,9 @@ int main(void) {
     uartCfg.Init.OverSampling = UART_OVERSAMPLING_16;
     HAL_UART_Init(&uartCfg);
 
-    // === ДИАГНОСТИКА: шлём маркер + причину сброса ПЕРВЫМ делом,
-    // ещё до того, как трогаем модуль E32 (M0/M1/AUX) ===
-    // 0xEE — маркер "начало загрузки", такого байта больше нигде не бывает.
-    // Второй байт — сама причина сброса (расшифровка ниже).
     uint8_t diag[2] = { 0xEE, resetCauseByte };
     HAL_UART_Transmit(&uartCfg, diag, sizeof(diag), 100);
     HAL_Delay(5);
-    // === конец диагностики ===
 
 
     EbyteConfig ebyte_cfg = {};
@@ -92,6 +104,7 @@ int main(void) {
     changeMode(EbyteMode::Normal, ebyte_cfg);
     HAL_Delay(50);
 
+
     while (HAL_GPIO_ReadPin(ebyte_cfg.auxPort, ebyte_cfg.auxPin) == GPIO_PIN_RESET) {
         HAL_Delay(1);
     }
@@ -101,12 +114,64 @@ int main(void) {
     __HAL_UART_CLEAR_OREFLAG(&uartCfg);
     __HAL_UART_FLUSH_DRREGISTER(ebyte_cfg.huart);
 
+    SpeckContext_t crypto_ctx = {};
+    speck_init(&crypto_ctx, RFBP_SECRET_KEY);
+
+    SpeckSessionCounter_t rx_cnt = {0, 0};
+
+    __HAL_UART_CLEAR_OREFLAG(&uartCfg);
+    __HAL_UART_CLEAR_FEFLAG(&uartCfg);
+    __HAL_UART_CLEAR_NEFLAG(&uartCfg);
+    __HAL_UART_CLEAR_PEFLAG(&uartCfg);
+
+    while((uartCfg.Instance->SR & USART_SR_RXNE) != 0) {
+    	volatile uint8_t dummy = uartCfg.Instance->DR;
+        (void)dummy;
+    }
+
     while (1) {
-        std::optional<LoraRxFrame_t> packet = readLoRa(ebyte_cfg, 200);
-        if (packet.has_value()) {
-            const LoraRxFrame_t& rx = *packet;
-            __NOP();
-        }
+    	switch (state) {
+    		case RadioFSM::IDLE: {
+    			std::optional<uint32_t> result = readHandshake(ebyte_cfg, TX_SESSION_SALT);
+    			if (result.has_value()) {
+    				std::optional<HandshakeTx_t> resp = sendHandshake(ebyte_cfg, 0x00, 0x00, 0x17,
+    																  result.value(), TX_SESSION_SALT, 100);
+    				if (resp.has_value()) {
+    					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+    					session_id = result.value();
+    					last_tick = HAL_GetTick();
+    					last_poll_tick = last_tick;
+    					rx_cnt = SpeckSessionCounter_t{session_id, 0};
+    					state = RadioFSM::ACTIVE;
+    				}
+    			}
+				break;
+    		}
+
+    	    case RadioFSM::ACTIVE: {
+    	    	uint32_t current_tick = HAL_GetTick();
+
+    	    	if (current_tick - last_tick >= SESSION_TIMEOUT_MS) {
+    	    		(void)sendHandshakeReply(ebyte_cfg, session_id, RX_SESSION_SALT, 100);
+    	    		state = RadioFSM::IDLE;
+    	            break;
+                }
+    	    	if (current_tick - last_poll_tick >= POLL_INTERVAL_MS) {
+    	    	    last_poll_tick = current_tick;
+
+    	    	    std::optional<LoraRxFrame_t> packet = readLoRa(ebyte_cfg, &crypto_ctx, &rx_cnt, 50);
+    	    	    if (packet.has_value()) {
+    	    	        last_tick = current_tick;
+    	    	        const LoraRxFrame_t& rx = *packet;
+    	    	    }
+    	    	}
+    			break;
+    	    }
+
+    	    default:
+    	    	state = RadioFSM::IDLE;
+    	    	break;
+    	}
     }
     return 0;
 }

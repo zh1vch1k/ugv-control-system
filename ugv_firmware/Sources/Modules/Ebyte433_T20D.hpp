@@ -65,7 +65,8 @@ bool changeMode(EbyteMode mode, const EbyteConfig& settings, uint32_t timeout_ms
 
 bool waitForAuxHigh(GPIO_TypeDef* auxPort, uint16_t auxPin, uint32_t timeout_ms = 100);
 
-std::optional<LoraRxFrame_t> readLoRa(const EbyteConfig& cfg, uint32_t timeout_ms = 100);
+std::optional<LoraRxFrame_t> readLoRa(const EbyteConfig& cfg, const SpeckContext_t* crypto_ctx,
+		  SpeckSessionCounter_t* rx_cnt, uint32_t timeout_ms = 100);
 
 std::optional<EbyteSettings_t> EbyteCfg(const EbyteConfig& cfg, uint32_t timeout_ms = 100);
 
