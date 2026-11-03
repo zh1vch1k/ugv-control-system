@@ -144,10 +144,13 @@ uint8_t ebyteChecksum(const uint8_t* buf, uint8_t len) {
 }
 
 uint8_t receiveEbyteRadioFrame(uint8_t* rx_buffer, uint32_t timeout_ms) {
+    write_LoRa_register(0x12, 0xFF); // Сброс флагов прерываний перед стартом приема
+    write_LoRa_register(0x0D, 0x00); // Сброс указателя FIFO
     write_LoRa_register(0x01, 0x85); // RX continuous
 
     uint32_t start_tick = xTaskGetTickCount();
     uint32_t timeout_ticks = pdMS_TO_TICKS(timeout_ms);
+
     uint32_t poll_count = 0;
 
     uint8_t irq_flags = 0;
@@ -160,7 +163,7 @@ uint8_t receiveEbyteRadioFrame(uint8_t* rx_buffer, uint32_t timeout_ms) {
             write_LoRa_register(0x01, 0x81);
             return 0;
         }
-        vTaskDelay(pdMS_TO_TICKS(1));
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 
     ESP_LOGI(TAG_LORA, "Radio event! IRQ flags=0x%02X after %lu polls", irq_flags, poll_count);
