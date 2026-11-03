@@ -65,7 +65,8 @@ out/
 
 # ESP-IDF temporary artifacts
 sdkconfig.old
-sdkconfig.ci
+sdkconfig*.old
+*.old
 managed_components/
 build/
 *.bin
@@ -99,3 +100,10 @@ runs/
 wandb/
 data/
 datasets/
+
+# ==========================================
+# Personal Documents / Resumes
+# ==========================================
+*CV*.pdf
+resume_*
+

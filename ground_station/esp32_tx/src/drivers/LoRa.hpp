@@ -12,6 +12,7 @@
 #include "freertos/task.h"
 #include "fsm.hpp"
 #include "esp_log.h"
+#include "esp_timer.h"
 
 
 #define LORA_MOSI 27
@@ -41,10 +42,14 @@ namespace config::freq {
         {0x08, 0x00}, // RegFrfLsb
 
         {0x09, 0x85}, // RegPaConfig: 7 dBm (PA_BOOST)
-        {0x1D, 0x72}, // RegModemConfig1: BW 125kHz, CR 4/5, Explicit Header
-        {0x1E, 0x74}, // RegModemConfig2: SF7, CRC On
-        {0x26, 0x04}, // RegModemConfig3: LowDataRateOptimize Off, AGC Auto On
+        // {0x1D, 0x72}, // RegModemConfig1: BW 125kHz, CR 4/5, Explicit Header
+        // {0x1E, 0x74}, // RegModemConfig2: SF7, CRC On
+        // {0x26, 0x04}, // RegModemConfig3: LowDataRateOptimize Off, AGC Auto On
 
+        {0x1D, 0x72}, // RegModemConfig1: BW 125kHz, CR 4/5, Explicit Header
+        {0x1E, 0x94}, // RegModemConfig2: SF9, CRC On (0x90 = SF9, 0x04 = CRC On)
+        {0x26, 0x04}, // RegModemConfig3: LowDataRateOptimize Off, AGC Auto On
+        
         {0x20, 0x00}, // RegPreambleMsb
         {0x21, 0x10}, // RegPreambleLsb: 16 symbols preamble for reliable EBYTE sync
         {0x39, 0x12}, // RegSyncWord: 0x12 (Default EBYTE E32 private network)
@@ -122,8 +127,13 @@ void sendEbyteRadioFrame(const T& txFrame) {
     write_LoRa_register(0x22, totalLen);
     write_LoRa_register(0x01, 0x83); 
 
+    uint32_t wait_start = esp_timer_get_time() / 1000;
     while ((read_LoRa_register(0x12) & 0x08) == 0) { 
-        vTaskDelay(pdMS_TO_TICKS(1));
+        vTaskDelay(pdMS_TO_TICKS(10));
+        if ((esp_timer_get_time() / 1000 - wait_start) > 250) {
+            ESP_LOGW("LORA_DRV", "TX Timeout waiting for RegIrqFlags!");
+            break;
+        }
     }
     write_LoRa_register(0x12, 0xFF); 
     write_LoRa_register(0x01, 0x81);

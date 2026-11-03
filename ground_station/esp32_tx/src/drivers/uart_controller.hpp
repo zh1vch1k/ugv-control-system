@@ -1,6 +1,7 @@
 #pragma once
 #include "utils/controller.hpp"
 #include "driver/uart.h"
+#include "driver/gpio.h"
 #include "esp_log.h"
 
 #define UART_PORT           UART_NUM_0  

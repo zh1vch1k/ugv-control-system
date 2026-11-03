@@ -2,6 +2,7 @@
 name = "joystick-control"
 version = "0.1.0"
 description = ""
+package-mode = false
 authors = [
     {name = "IlliaKyselov1902",email = "qwertytwenty129@gmail.com"}
 ]
